@@ -60,6 +60,21 @@ public class FarmaciaController {
         }
     }
 
+    // GET /api/v1/farmacias/proximas-por-medicamento?cep=12345000&raio=5&nomeMedicamento=rituximab
+    @GetMapping("/proximas-por-medicamento")
+    public ResponseEntity<List<Farmacia>> buscarProximasPorMedicamento(
+            @RequestParam String cep,
+            @RequestParam double raio,
+            @RequestParam String nomeMedicamento) {
+
+        List<Farmacia> proximas = farmaciaService.buscarProximasComMedicamento(
+                cep,
+                raio,
+                nomeMedicamento
+        );
+
+        return ResponseEntity.ok(proximas);
+    }
 
 }
 
