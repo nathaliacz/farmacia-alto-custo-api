@@ -65,6 +65,72 @@ Padrão: **MVC + REST**
 
 ---
 
-## 🌐 Endpoints da API
+## Endpoints da API
 
 ### ➤ **Cadastrar farmácia**
+```
+POST /api/v1/farmacias
+```
+
+### ➤ **Farmácias próximas (sem medicamento)**
+```
+GET /api/v1/farmacias/proximas?cep=08575-000&raio=5
+```
+
+### ➤ **Farmácias próximas com medicamento**
+```
+GET /api/v1/farmacias/proximas-por-medicamento?cep=08575-000&raio=20&medicamento=rituximab
+```
+
+---
+
+## Query Customizada
+
+```java
+@Query("""
+    SELECT e.farmacia
+    FROM Estoque e
+    JOIN e.medicamento m
+    WHERE LOWER(m.nome) = LOWER(:nomeMedicamento)
+""")
+List<Farmacia> buscarFarmaciasQueTemMedicamentoPorNome(String nomeMedicamento);
+```
+
+---
+
+## Segurança
+
+- Validação de CNPJ e e-mail  
+- Senha armazenada como hash  
+- Uso de variáveis de ambiente (GOOGLE_API_KEY)  
+- JPA evita SQL Injection  
+- Tratamento de exceções  
+- CORS configurado  
+
+---
+
+## 🛠 Como Rodar o Projeto
+
+### Criar database:
+```
+CREATE DATABASE farmacia_alto_custo;
+```
+
+### Configurar `application.properties`
+```
+spring.datasource.url=jdbc:mysql://localhost:3306/farmacia_alto_custo
+spring.datasource.username=root
+spring.datasource.password=SENHA
+
+google.api.key=${GOOGLE_API_KEY}
+```
+
+### Rodar a aplicação:
+```
+mvn spring-boot:run
+```
+
+---
+
+## Status: 100% funcional ✔
+
