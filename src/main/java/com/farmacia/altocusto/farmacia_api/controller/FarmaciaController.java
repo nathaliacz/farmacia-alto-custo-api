@@ -32,6 +32,12 @@ public class FarmaciaController {
         return ResponseEntity.ok(farmaciaService.buscar(id));
     }
 
+    @GetMapping
+    public ResponseEntity<List<Farmacia>> listarTodas() {
+        List<Farmacia> farmacias = farmaciaService.listarTodas();
+        return ResponseEntity.ok(farmacias);
+    }
+
     @GetMapping("/por-medicamento")
     public ResponseEntity<List<Farmacia>> buscarPorMedicamento(@RequestParam String nome) {
         return ResponseEntity.ok(
@@ -60,18 +66,15 @@ public class FarmaciaController {
         }
     }
 
-    // GET /api/v1/farmacias/proximas-por-medicamento?cep=12345000&raio=5&nomeMedicamento=rituximab
+    // GET /api/v1/farmacias/proximas-por-medicamento?cep=08780200&raio=5&medicamento=rituximab
     @GetMapping("/proximas-por-medicamento")
-    public ResponseEntity<List<Farmacia>> buscarProximasPorMedicamento(
-            @RequestParam String cep,
-            @RequestParam double raio,
-            @RequestParam String nomeMedicamento) {
+    public ResponseEntity<List<Farmacia>> buscarProximasComMedicamento(
+            @RequestParam(name = "cep") String cepOuEndereco,
+            @RequestParam(name = "raio") double raioKm,
+            @RequestParam(name = "medicamento") String nomeMedicamento) {
 
-        List<Farmacia> proximas = farmaciaService.buscarProximasComMedicamento(
-                cep,
-                raio,
-                nomeMedicamento
-        );
+        List<Farmacia> proximas =
+                farmaciaService.buscarProximasComMedicamento(cepOuEndereco, raioKm, nomeMedicamento);
 
         return ResponseEntity.ok(proximas);
     }

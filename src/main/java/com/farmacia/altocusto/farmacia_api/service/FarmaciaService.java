@@ -27,6 +27,10 @@ public class FarmaciaService {
         this.estoqueRepository = estoqueRepository;
     }
 
+    public List<Farmacia> listarTodas() {
+        return farmaciaRepository.findAll();
+    }
+
     // 🔹 Farmácias próximas (independente de medicamento)
     public List<Farmacia> buscarProximas(String cepOuEndereco, double raioKm) {
 
