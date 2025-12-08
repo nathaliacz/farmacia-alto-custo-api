@@ -34,7 +34,7 @@ public class FarmaciaService {
         return farmaciaRepository.findAll();
     }
 
-    // 🔹 Farmácias próximas (independente de medicamento)
+    // Farmácias próximas (independente de medicamento)
     public List<Farmacia> buscarProximas(String cepOuEndereco, double raioKm) {
 
         // 1. Obter lat/long do usuário
@@ -68,7 +68,7 @@ public class FarmaciaService {
         return proximas;
     }
 
-    // 🔹 Farmácias próximas que têm um medicamento específico
+    // Farmácias próximas que têm um medicamento específico
     public List<Farmacia> buscarProximasComMedicamento(String cepOuEndereco,
                                                        double raioKm,
                                                        String nomeMedicamento) {
@@ -125,7 +125,7 @@ public class FarmaciaService {
         return R * c;
     }
 
-    // 🔹 CRIAR FARMÁCIA (GERA HASH DA SENHA E LAT/LONG)
+    // CRIAR FARMÁCIA (GERA HASH DA SENHA E LAT/LONG)
     public Farmacia criar(Farmacia farmacia) {
 
         if (farmaciaRepository.existsByEmail(farmacia.getEmail())) {
@@ -148,20 +148,17 @@ public class FarmaciaService {
             farmacia.setDataCadastro(LocalDateTime.now());
         }
 
-        // 👉 Pega o EnderecoFarmacia associado
+        // Endereço da farmácia -> gera latitude/longitude
         EnderecoFarmacia end = farmacia.getEnderecoFarmacia();
 
         if (end != null) {
-            // garante o lado dono do relacionamento
             end.setFarmacia(farmacia);
 
-            // monta um endereço completo para enviar pro Google
             String enderecoCompleto =
                     end.getLogradouro() + ", " + end.getNumero() + " - " +
                             end.getBairro() + ", " + end.getCidade() + " - " +
                             end.getEstado() + ", " + end.getCep();
 
-            // consulta no Google e preenche latitude/longitude
             double[] latlng = googleMapsService.obterLatLong(enderecoCompleto);
             farmacia.setLatitude(latlng[0]);
             farmacia.setLongitude(latlng[1]);
@@ -170,7 +167,7 @@ public class FarmaciaService {
         return farmaciaRepository.save(farmacia);
     }
 
-    // 🔹 LOGIN DA FARMÁCIA (aceita senha antiga em texto puro e nova com hash)
+    // LOGIN DA FARMÁCIA (aceita senha antiga em texto puro e nova com hash)
     public Farmacia login(String email, String senhaPura) {
 
         Optional<Farmacia> opt = farmaciaRepository.findByEmail(email);
@@ -189,7 +186,6 @@ public class FarmaciaService {
         if (senhaBanco != null && senhaBanco.equals(senhaHashCalculada)) {
             senhaConfere = true;
         }
-
         // 2) Caso antigo: senha no banco ainda é texto puro (ex.: "123456")
         else if (senhaBanco != null && senhaBanco.equals(senhaPura)) {
             senhaConfere = true;

@@ -17,9 +17,11 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Long> {
     @Query("""
         SELECT e.farmacia
         FROM Estoque e
-        WHERE LOWER(e.medicamento.nome) LIKE LOWER(CONCAT('%', :nome, '%'))
-        AND e.quantidade > 0
+        JOIN e.medicamento m
+        WHERE LOWER(m.nome) LIKE LOWER(CONCAT('%', :nome, '%'))
+          AND e.quantidade > 0
     """)
     List<Farmacia> buscarFarmaciasQueTemMedicamentoPorNome(@Param("nome") String nome);
-}
 
+    List<Estoque> findByFarmacia(Farmacia farmacia);
+}

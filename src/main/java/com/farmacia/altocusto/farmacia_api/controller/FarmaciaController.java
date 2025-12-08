@@ -29,13 +29,13 @@ public class FarmaciaController {
         return ResponseEntity.ok(farmaciaService.criar(farmacia));
     }
 
-    // LOGIN FARMÁCIA (AGORA USANDO LoginRequest)
+    // ✅ LOGIN FARMÁCIA USANDO DTO (email + senha)
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest credenciais) {
         try {
             Farmacia farmacia = farmaciaService.login(
-                    request.getEmail(),
-                    request.getSenha()   // senha pura
+                    credenciais.getEmail(),
+                    credenciais.getSenha()   // senha pura que veio do front
             );
             return ResponseEntity.ok(farmacia);
         } catch (RuntimeException e) {
@@ -50,7 +50,8 @@ public class FarmaciaController {
 
     @GetMapping
     public ResponseEntity<List<Farmacia>> listarTodas() {
-        return ResponseEntity.ok(farmaciaService.listarTodas());
+        List<Farmacia> farmacias = farmaciaService.listarTodas();
+        return ResponseEntity.ok(farmacias);
     }
 
     @GetMapping("/por-medicamento")
@@ -87,8 +88,9 @@ public class FarmaciaController {
             @RequestParam(name = "raio") double raioKm,
             @RequestParam(name = "medicamento") String nomeMedicamento) {
 
-        return ResponseEntity.ok(
-                farmaciaService.buscarProximasComMedicamento(cepOuEndereco, raioKm, nomeMedicamento)
-        );
+        List<Farmacia> proximas =
+                farmaciaService.buscarProximasComMedicamento(cepOuEndereco, raioKm, nomeMedicamento);
+
+        return ResponseEntity.ok(proximas);
     }
 }
