@@ -5,11 +5,14 @@ import com.farmacia.altocusto.farmacia_api.model.Farmacia;
 import com.farmacia.altocusto.farmacia_api.repository.EstoqueRepository;
 import com.farmacia.altocusto.farmacia_api.repository.FarmaciaRepository;
 import com.farmacia.altocusto.farmacia_api.service.externos.GoogleMapsService;
+import com.farmacia.altocusto.farmacia_api.util.HashUtil;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FarmaciaService {
@@ -18,7 +21,6 @@ public class FarmaciaService {
     private final GoogleMapsService googleMapsService;
     private final EstoqueRepository estoqueRepository;
 
-    // Tudo injetado pelo construtor
     public FarmaciaService(FarmaciaRepository farmaciaRepository,
                            GoogleMapsService googleMapsService,
                            EstoqueRepository estoqueRepository) {
@@ -27,6 +29,7 @@ public class FarmaciaService {
         this.estoqueRepository = estoqueRepository;
     }
 
+    // LISTAR TODAS
     public List<Farmacia> listarTodas() {
         return farmaciaRepository.findAll();
     }
@@ -122,7 +125,7 @@ public class FarmaciaService {
         return R * c;
     }
 
-    // 🔹 CRIAR FARMÁCIA (AGORA GERANDO LAT/LONG PELO ENDERECOFARMACIA)
+    // 🔹 CRIAR FARMÁCIA (GERA HASH DA SENHA E LAT/LONG)
     public Farmacia criar(Farmacia farmacia) {
 
         if (farmaciaRepository.existsByEmail(farmacia.getEmail())) {
@@ -131,6 +134,18 @@ public class FarmaciaService {
 
         if (farmaciaRepository.existsByCnpj(farmacia.getCnpj())) {
             throw new RuntimeException("Já existe farmácia cadastrada com esse CNPJ.");
+        }
+
+        // senha enviada em senhaHash é a senha pura
+        String senhaPura = farmacia.getSenhaHash();
+        if (senhaPura == null || senhaPura.isBlank()) {
+            throw new RuntimeException("Senha é obrigatória.");
+        }
+        String senhaHash = HashUtil.sha256(senhaPura);
+        farmacia.setSenhaHash(senhaHash);
+
+        if (farmacia.getDataCadastro() == null) {
+            farmacia.setDataCadastro(LocalDateTime.now());
         }
 
         // 👉 Pega o EnderecoFarmacia associado
@@ -155,8 +170,57 @@ public class FarmaciaService {
         return farmaciaRepository.save(farmacia);
     }
 
-    // BUSCAR / DELETAR
+    // 🔹 LOGIN DA FARMÁCIA (aceita senha antiga em texto puro e nova com hash)
+    public Farmacia login(String email, String senhaPura) {
 
+        Optional<Farmacia> opt = farmaciaRepository.findByEmail(email);
+        if (opt.isEmpty()) {
+            throw new RuntimeException("Farmácia não encontrada.");
+        }
+
+        Farmacia farmacia = opt.get();
+
+        String senhaBanco = farmacia.getSenhaHash();
+        String senhaHashCalculada = HashUtil.sha256(senhaPura);
+
+        boolean senhaConfere = false;
+
+        // 1) Caso novo: senha já está em hash no banco
+        if (senhaBanco != null && senhaBanco.equals(senhaHashCalculada)) {
+            senhaConfere = true;
+        }
+
+        // 2) Caso antigo: senha no banco ainda é texto puro (ex.: "123456")
+        else if (senhaBanco != null && senhaBanco.equals(senhaPura)) {
+            senhaConfere = true;
+
+            // Atualiza para hash no banco para não ficar senha pura
+            farmacia.setSenhaHash(senhaHashCalculada);
+            farmaciaRepository.save(farmacia);
+        }
+
+        if (!senhaConfere) {
+            throw new RuntimeException("Senha incorreta.");
+        }
+
+        // monta um objeto de resposta SEM a senha
+        Farmacia resposta = new Farmacia();
+        resposta.setId(farmacia.getId());
+        resposta.setNomeFantasia(farmacia.getNomeFantasia());
+        resposta.setRazaoSocial(farmacia.getRazaoSocial());
+        resposta.setCnpj(farmacia.getCnpj());
+        resposta.setEmail(farmacia.getEmail());
+        resposta.setTelefone(farmacia.getTelefone());
+        resposta.setLatitude(farmacia.getLatitude());
+        resposta.setLongitude(farmacia.getLongitude());
+        resposta.setDataCadastro(farmacia.getDataCadastro());
+        resposta.setEnderecoFarmacia(farmacia.getEnderecoFarmacia());
+        resposta.setDistanciaKm(farmacia.getDistanciaKm());
+
+        return resposta;
+    }
+
+    // BUSCAR / DELETAR
     public Farmacia buscar(Long id) {
         return farmaciaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Farmácia não encontrada"));

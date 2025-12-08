@@ -1,5 +1,6 @@
 package com.farmacia.altocusto.farmacia_api.controller;
 
+import com.farmacia.altocusto.farmacia_api.dto.LoginRequest;
 import com.farmacia.altocusto.farmacia_api.model.Farmacia;
 import com.farmacia.altocusto.farmacia_api.service.EstoqueService;
 import com.farmacia.altocusto.farmacia_api.service.FarmaciaService;
@@ -22,9 +23,24 @@ public class FarmaciaController {
         this.estoqueService = estoqueService;
     }
 
+    // CADASTRAR FARMÁCIA
     @PostMapping
     public ResponseEntity<Farmacia> criar(@RequestBody Farmacia farmacia) {
         return ResponseEntity.ok(farmaciaService.criar(farmacia));
+    }
+
+    // LOGIN FARMÁCIA (AGORA USANDO LoginRequest)
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            Farmacia farmacia = farmaciaService.login(
+                    request.getEmail(),
+                    request.getSenha()   // senha pura
+            );
+            return ResponseEntity.ok(farmacia);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{id}")
@@ -34,8 +50,7 @@ public class FarmaciaController {
 
     @GetMapping
     public ResponseEntity<List<Farmacia>> listarTodas() {
-        List<Farmacia> farmacias = farmaciaService.listarTodas();
-        return ResponseEntity.ok(farmacias);
+        return ResponseEntity.ok(farmaciaService.listarTodas());
     }
 
     @GetMapping("/por-medicamento")
@@ -66,19 +81,14 @@ public class FarmaciaController {
         }
     }
 
-    // GET /api/v1/farmacias/proximas-por-medicamento?cep=08780200&raio=5&medicamento=rituximab
     @GetMapping("/proximas-por-medicamento")
     public ResponseEntity<List<Farmacia>> buscarProximasComMedicamento(
             @RequestParam(name = "cep") String cepOuEndereco,
             @RequestParam(name = "raio") double raioKm,
             @RequestParam(name = "medicamento") String nomeMedicamento) {
 
-        List<Farmacia> proximas =
-                farmaciaService.buscarProximasComMedicamento(cepOuEndereco, raioKm, nomeMedicamento);
-
-        return ResponseEntity.ok(proximas);
+        return ResponseEntity.ok(
+                farmaciaService.buscarProximasComMedicamento(cepOuEndereco, raioKm, nomeMedicamento)
+        );
     }
-
 }
-
-
